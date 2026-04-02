@@ -1,12 +1,10 @@
-import { Controller, Get, Post, Delete, Put, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param } from '@nestjs/common';
 import { AppService } from './app.service';
-import { IPost } from './app.service'
-
+import { IPost } from './app.service';
 
 @Controller('posts')
 export class AppController {
-  constructor(private readonly appService: AppService) { }
-
+  constructor(private readonly appService: AppService) {}
 
   // 전체 조회
   @Get()
@@ -16,7 +14,9 @@ export class AppController {
 
   // 글 작성
   @Post()
-  createPost(@Body() body: { title: string; content: string; userid: number; postindex: number }) {
+  createPost(
+    @Body() body: { title: string; content: string; userid: number; postindex: number}
+  ): IPost | { message: string } {
     return this.appService.createPost(body);
   }
 
@@ -24,14 +24,14 @@ export class AppController {
   @Put(':id')
   updatePost(
     @Param('id') id: string,
-    @Body() body: { title: string; content: string; userid: number; postindex: number },
-  ): IPost | { message: string; } {
-    return this.appService.updatePost(Number(id), body);
+    @Body() body: { title: string; content: string; userid: number; postindex: number}
+  ): IPost | { message: string } {
+    return this.appService.updatePost(+id, body);
   }
 
   // 글 삭제
   @Delete(':id')
-  deletePost(@Param('id') id: string) {
-    return this.appService.deletePost(Number(id));
+  deletePost(@Param('id') id: string): { message: string } {
+    return this.appService.deletePost(+id);
   }
 }

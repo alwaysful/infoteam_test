@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PostRepository } from './post.repository';
-import { CreatePostDto } from './dto_post/create.post.dto';
-import { UpdatePostDto } from './dto_post/update.post.dto';
+import { CreatePostDto } from './dto.post/create-post.dto';
+import { UpdatePostDto } from './dto.post/update-post.dto';
 
 @Injectable()
 export class PostService {

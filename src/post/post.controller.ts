@@ -3,9 +3,12 @@ import {
   Param, Body, Query
 } from '@nestjs/common';
 import { PostService } from './post.service';
-import { CreatePostDto } from './dto/create-post.dto';
-import { UpdatePostDto } from './dto/update-post.dto';
+import { CreatePostDto } from './dto_post/create-post.dto';
+import { UpdatePostDto } from './dto_post/update-post.dto';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { UseGuards } from '@nestjs/common';
+import { JwtGuard } from '../auth/jwt.guard';
+
 
 @ApiTags('posts')
 @Controller('posts')
@@ -48,4 +51,10 @@ export class PostController {
   delete(@Param('id') id: string) {
     return this.service.deletePost(+id);
   }
+}
+
+@UseGuards(JwtGuard)
+@Post()
+create(@Body() dto) {
+  return this.service.createPost(dto);
 }

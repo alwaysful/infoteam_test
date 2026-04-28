@@ -17,15 +17,12 @@ export class PostRepository {
     return this.prisma.post.findMany({ where: { userId } });
   }
 
-  create(data: { title: string; content: string; userId: number }) {
+  create(data: any) {
     return this.prisma.post.create({ data });
   }
 
-  update(id: number, data: { title: string; content: string }) {
-    return this.prisma.post.update({
-      where: { id },
-      data,
-    });
+  update(id: number, data: any) {
+    return this.prisma.post.update({ where: { id }, data });
   }
 
   delete(id: number) {

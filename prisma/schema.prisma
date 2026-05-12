@@ -10,10 +10,20 @@ datasource db {
 }
 
 model User {
-  id       Int     @id @default(autoincrement())
-  username String  @unique
-  password String
-  posts    Post[]
+  id Int @id @default(autoincrement())
+
+  username String? @unique
+  email    String  @unique
+  password String?
+
+  provider   String? // local, infoteam, google
+  providerId String?
+
+  createdAt DateTime @default(now())
+
+  posts Post[]
+
+  @@unique([provider, providerId])
 }
 
 model Post {

@@ -35,6 +35,7 @@ export class PostController {
   }
 
   // 생성
+  @UseGuards(JwtGuard)
   @Post()
   create(@Body() dto: CreatePostDto) {
     return this.service.createPost(dto);
@@ -51,10 +52,5 @@ export class PostController {
   delete(@Param('id') id: string) {
     return this.service.deletePost(+id);
   }
-}
 
-@UseGuards(JwtGuard)
-@Post()
-create(@Body() dto) {
-  return this.service.createPost(dto);
 }

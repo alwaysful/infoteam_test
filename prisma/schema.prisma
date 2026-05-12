@@ -3,9 +3,10 @@ generator client {
   output   = "../generated/prisma"
 }
 
+//DATABASE_URL="postgresql://postgres:1234@localhost:5432/infoteamtest"
+
 datasource db {
   provider = "postgresql"
-  url = env("postgresql://postgres:1234@localhost:5432/infoteamtest")
 }
 
 model User {

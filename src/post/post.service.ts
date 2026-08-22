@@ -2,10 +2,14 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PostRepository } from './post.repository';
 import { CreatePostDto } from './dto.post/create-post.dto';
 import { UpdatePostDto } from './dto.post/update-post.dto';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class PostService {
-  constructor(private readonly repo: PostRepository) {}
+  constructor(
+    private readonly repo: PostRepository,
+    private readonly notificationService: NotificationService,
+  ) {}
 
   // 전체 조회
   getPosts() {
@@ -20,13 +24,19 @@ export class PostService {
   }
 
   // userId 조회
-  getPostsByUserId(userId: number) {
-    return this.repo.findByUserId(userId);
+  getPostsByUserId(userId: string) {
+   return this.repo.findByUserId(userId); 
   }
 
   // 생성
-  createPost(dto: CreatePostDto) {
-    return this.repo.create(dto);
+  async createPost(dto: CreatePostDto) {
+    const post = await this.repo.create(dto);
+
+    this.notificationService.sendNotifications(
+      post.categoryId,
+    );
+
+    return post;
   }
 
   // 수정

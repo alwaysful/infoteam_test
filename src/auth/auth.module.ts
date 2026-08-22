@@ -5,18 +5,27 @@ import { PrismaModule } from '../../prisma/prisma.module';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './jwt.strategy';
 import { PassportModule } from '@nestjs/passport';
-import { InfoTeamStrategy } from './strategies/infoteam.strategy';
+import { InfoTeamStrategy } from './infoteam.strategy';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [
     PrismaModule,
+
+    HttpModule,
+
     JwtModule.register({
       secret: 'secret',
       signOptions: { expiresIn: '1h' },
     }),
+
     PassportModule,
   ],
-  providers: [AuthService, JwtStrategy, InfoTeamStrategy],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    InfoTeamStrategy,
+  ],
   controllers: [AuthController],
 })
 export class AuthModule {}

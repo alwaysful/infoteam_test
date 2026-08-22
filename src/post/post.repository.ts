@@ -13,8 +13,8 @@ export class PostRepository {
     return this.prisma.post.findUnique({ where: { id } });
   }
 
-  findByUserId(userId: number) {
-    return this.prisma.post.findMany({ where: { userId } });
+  findByUserId(userId: string) {
+   return this.prisma.post.findMany({ where: { userId } });
   }
 
   create(data: any) {

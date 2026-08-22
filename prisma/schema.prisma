@@ -10,29 +10,52 @@ datasource db {
 }
 
 model User {
-  id Int @id @default(autoincrement())
+  id String @id @default(uuid()) @db.Uuid
 
   username String? @unique
+  name     String?
   email    String  @unique
   password String?
 
-  provider   String? // local, infoteam, google
-  providerId String?
+  sub      String? @unique
+  provider String?
 
   createdAt DateTime @default(now())
 
-  posts Post[]
-
-  @@unique([provider, providerId])
+  posts         Post[]
+  subscriptions Subscription[]
 }
 
 model Post {
-  id        Int      @id @default(autoincrement())
-  title     String
-  content   String
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id])
+  id         Int      @id @default(autoincrement())
+  title      String
+  content    String
+
+  userId     String   @db.Uuid
+  categoryId Int
+
+  user       User     @relation(fields: [userId], references: [id])
+  category   Category @relation(fields: [categoryId], references: [id])
+
   createdAt DateTime @default(now())
+}
+
+model Category {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  posts         Post[]
+  subscriptions Subscription[]
+}
+
+model Subscription {
+  userId     String @db.Uuid
+  categoryId Int
+
+  user     User     @relation(fields: [userId], references: [id])
+  category Category @relation(fields: [categoryId], references: [id])
+
+  @@id([userId, categoryId])
 }
 
 // This is your Prisma schema file,

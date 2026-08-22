@@ -31,7 +31,7 @@ export class PostController {
   // userId 조회
   @Get('/user')
   getByUser(@Query('userId') userId: string) {
-    return this.service.getPostsByUserId(+userId);
+    return this.service.getPostsByUserId(userId);
   }
 
   // 생성

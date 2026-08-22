@@ -6,8 +6,8 @@ import { Strategy, Profile } from 'passport-google-oauth20';
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   constructor() {
     super({
-      clientID: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      clientID: process.env.GOOGLE_CLIENT_ID as string,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
       callbackURL: 'http://localhost:3000/auth/google/callback',
       scope: ['email', 'profile'],
     });
@@ -16,7 +16,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
 
   async validate(accessToken: string, refreshToken: string, profile: Profile) {
     return {
-      email: profile.emails[0].value,
+      email: profile.emails?.[0]?.value,
       name: profile.displayName,
     };
   }

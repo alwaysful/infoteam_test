@@ -59,7 +59,7 @@ export class AuthService {
     let user = await this.prisma.user.findFirst({
       where: {
         provider: oauthUser.provider,
-        providerId: oauthUser.providerId,
+        sub: oauthUser.providerId,
       },
     });
 
@@ -68,7 +68,7 @@ export class AuthService {
         data: {
           email: oauthUser.email,
           provider: oauthUser.provider,
-          providerId: oauthUser.providerId,
+          sub: oauthUser.providerId,
         },
       });
     }

@@ -1,0 +1,199 @@
+diff --git a/src/category/category.controller.ts b/src/category/category.controller.ts
+index 4da5761..52a4960 100644
+--- a/src/category/category.controller.ts
++++ b/src/category/category.controller.ts
+@@ -6,9 +6,12 @@ import {
+   Param,
+   ParseIntPipe,
+   Post,
++  Req,
++  UseGuards,
+ } from '@nestjs/common';
+ import { CategoryService } from './category.service';
+ import { CreateCategoryDto } from './category.dto';
++import { JwtGuard } from '../auth/jwt.guard';
+ 
+ @Controller('category')
+ export class CategoryController {
+@@ -23,7 +26,14 @@ export class CategoryController {
+   async getCategoryStats() {
+     return this.categoryService.getCategoryStats();
+   }
+-  
++
++  // 기능 3-A) 본인 구독 현황 + 카테고리별 작성한 글의 수
++  @UseGuards(JwtGuard)
++  @Get('me/stats')
++  async getMyStats(@Req() req) {
++    return this.categoryService.getMySubscriptionStats(req.user.userId);
++  }
++
+   @Post()
+   create(@Body() dto: CreateCategoryDto) {
+     return this.categoryService.create(dto.name);
+diff --git a/src/category/category.service.ts b/src/category/category.service.ts
+index 1eee0e5..a398df5 100644
+--- a/src/category/category.service.ts
++++ b/src/category/category.service.ts
+@@ -56,4 +56,30 @@ export class CategoryService {
+       ORDER BY c.id;
+     `;
+    }
++
++  // 기능 3-A) 본인 구독 현황 + 카테고리별 작성한 글의 수
++  async getMySubscriptionStats(userId: string) {
++    return this.prisma.$queryRaw<
++      {
++        categoryId: number;
++        categoryName: string;
++        isSubscribed: boolean;
++        myPostCount: number;
++      }[]
++    >`
++      SELECT
++          c.id AS "categoryId",
++          c.name AS "categoryName",
++          EXISTS (
++            SELECT 1 FROM "Subscription" s
++            WHERE s."categoryId" = c.id AND s."userId" = ${userId}::uuid
++          ) AS "isSubscribed",
++          COUNT(p.id) FILTER (WHERE p."userId" = ${userId}::uuid)::int AS "myPostCount"
++      FROM "Category" c
++      LEFT JOIN "Post" p
++          ON p."categoryId" = c.id
++      GROUP BY c.id, c.name
++      ORDER BY c.id;
++    `;
++  }
+ }
+\ No newline at end of file
+diff --git a/src/post/dto.post/get-my-posts.dto.ts b/src/post/dto.post/get-my-posts.dto.ts
+new file mode 100644
+index 0000000..92f11fa
+--- /dev/null
++++ b/src/post/dto.post/get-my-posts.dto.ts
+@@ -0,0 +1,16 @@
++import { Type } from 'class-transformer';
++import { IsInt, IsOptional, Min } from 'class-validator';
++
++export class GetMyPostsDto {
++  @IsOptional()
++  @Type(() => Number)
++  @IsInt()
++  @Min(1)
++  page?: number = 1;
++
++  @IsOptional()
++  @Type(() => Number)
++  @IsInt()
++  @Min(1)
++  limit?: number = 10;
++}
+diff --git a/src/post/post.controller.ts b/src/post/post.controller.ts
+index 27cf34c..faad7d8 100644
+--- a/src/post/post.controller.ts
++++ b/src/post/post.controller.ts
+@@ -5,8 +5,9 @@ import {
+ import { PostService } from './post.service';
+ import { CreatePostDto } from './dto.post/create-post.dto';
+ import { UpdatePostDto } from './dto.post/update-post.dto';
++import { GetMyPostsDto } from './dto.post/get-my-posts.dto';
+ import { ApiTags, ApiOperation } from '@nestjs/swagger';
+-import { UseGuards } from '@nestjs/common';
++import { UseGuards, Req } from '@nestjs/common';
+ import { JwtGuard } from '../auth/jwt.guard';
+ 
+ 
+@@ -22,10 +23,11 @@ export class PostController {
+     return this.service.getPosts();
+   }
+ 
+-  // ID 조회
+-  @Get(':id')
+-  getPostById(@Param('id') id: string) {
+-    return this.service.getPostById(+id);
++  // 기능 3-B) 본인 글 목록 페이지네이션
++  @UseGuards(JwtGuard)
++  @Get('/me')
++  getMyPosts(@Req() req, @Query() dto: GetMyPostsDto) {
++    return this.service.getMyPosts(req.user.userId, dto.page, dto.limit);
+   }
+ 
+   // userId 조회
+@@ -34,6 +36,12 @@ export class PostController {
+     return this.service.getPostsByUserId(userId);
+   }
+ 
++  // ID 조회
++  @Get(':id')
++  getPostById(@Param('id') id: string) {
++    return this.service.getPostById(+id);
++  }
++
+   // 생성
+   @UseGuards(JwtGuard)
+   @Post()
+diff --git a/src/post/post.repository.ts b/src/post/post.repository.ts
+index 959914a..b9a9437 100644
+--- a/src/post/post.repository.ts
++++ b/src/post/post.repository.ts
+@@ -17,6 +17,43 @@ export class PostRepository {
+    return this.prisma.post.findMany({ where: { userId } });
+   }
+ 
++  // 기능 3-B) 본인 글 목록 페이지네이션
++  async findMyPostsPaginated(userId: string, page: number, limit: number) {
++    const offset = (page - 1) * limit;
++
++    const rows = await this.prisma.$queryRaw<
++      {
++        id: number;
++        title: string;
++        content: string;
++        categoryId: number;
++        createdAt: Date;
++        totalCount: number;
++      }[]
++    >`
++      SELECT
++          p.id, p.title, p.content, p."categoryId", p."createdAt",
++          COUNT(*) OVER()::int AS "totalCount"
++      FROM "Post" p
++      WHERE p."userId" = ${userId}::uuid
++      ORDER BY p."createdAt" DESC
++      LIMIT ${limit} OFFSET ${offset};
++    `;
++
++    const totalCount = rows[0]?.totalCount ?? 0;
++    const posts = rows.map(({ totalCount, ...rest }) => rest);
++
++    return {
++      posts,
++      pagination: {
++        page,
++        limit,
++        totalCount,
++        totalPages: Math.ceil(totalCount / limit),
++      },
++    };
++  }
++
+   create(data: any) {
+     return this.prisma.post.create({ data });
+   }
+diff --git a/src/post/post.service.ts b/src/post/post.service.ts
+index 6b4dd99..2eeb8ad 100644
+--- a/src/post/post.service.ts
++++ b/src/post/post.service.ts
+@@ -28,6 +28,11 @@ export class PostService {
+    return this.repo.findByUserId(userId); 
+   }
+ 
++  // 기능 3-B) 본인 글 목록 페이지네이션
++  getMyPosts(userId: string, page: number, limit: number) {
++    return this.repo.findMyPostsPaginated(userId, page, limit);
++  }
++
+   // 생성
+   async createPost(dto: CreatePostDto) {
+     const post = await this.repo.create(dto);

@@ -16,9 +16,6 @@ export class InfoTeamStrategy extends PassportStrategy(Strategy, 'infoteam') {
     });
   }
 
-  //서비스ID: 38e209cc-b0d4-4e31-bf42-0154fef66144
-  //서비스비번: TdaAs8sxHcxJ2stfPjIKOf0sFEyru0aNf1BwVHKsfs
-
   async validate(accessToken: string, refreshToken: string, profile: any) {
     return {
       provider: 'infoteam',

@@ -19,17 +19,29 @@ export class PostRepository {
 
   // 본인 글 목록 페이지네이션
   async findMyPostsPaginated(userId: string, page: number, limit: number) {
-    const skip = (page - 1) * limit;
+    const offset = (page - 1) * limit;
 
-    const [posts, totalCount] = await this.prisma.$transaction([
-      this.prisma.post.findMany({
-        where: { userId },
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: limit,
-      }),
-      this.prisma.post.count({ where: { userId } }),
-    ]);
+    const rows = await this.prisma.$queryRaw<
+      {
+        id: number;
+        title: string;
+        content: string;
+        categoryId: number;
+        createdAt: Date;
+        totalCount: number;
+      }[]
+    >`
+      SELECT
+          p.id, p.title, p.content, p."categoryId", p."createdAt",
+          COUNT(*) OVER()::int AS "totalCount"
+      FROM "Post" p
+      WHERE p."userId" = ${userId}::uuid
+      ORDER BY p."createdAt" DESC
+      LIMIT ${limit} OFFSET ${offset};
+    `;
+
+    const totalCount = rows[0]?.totalCount ?? 0;
+    const posts = rows.map(({ totalCount, ...rest }) => rest);
 
     return {
       posts,

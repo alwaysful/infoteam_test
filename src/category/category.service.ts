@@ -31,4 +31,29 @@ export class CategoryService {
       },
     });
   }
+
+  // 카테고리 조회
+   async getCategoryStats() {
+    return this.prisma.$queryRaw<
+      {
+        categoryId: number;
+        categoryName: string;
+        postCount: number;
+        subscriberCount: number;
+      }[]
+    >`
+      SELECT
+          c.id AS "categoryId",
+          c.name AS "categoryName",
+          COUNT(DISTINCT p.id)::int AS "postCount",
+          COUNT(DISTINCT s."userId")::int AS "subscriberCount"
+      FROM "Category" c
+      LEFT JOIN "Post" p
+          ON p."categoryId" = c.id
+      LEFT JOIN "Subscription" s
+          ON s."categoryId" = c.id
+      GROUP BY c.id, c.name
+      ORDER BY c.id;
+    `;
+   }
 }

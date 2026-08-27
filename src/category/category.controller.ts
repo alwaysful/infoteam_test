@@ -19,6 +19,11 @@ export class CategoryController {
     return this.categoryService.findAll();
   }
 
+    @Get('stats')
+  async getCategoryStats() {
+    return this.categoryService.getCategoryStats();
+  }
+  
   @Post()
   create(@Body() dto: CreateCategoryDto) {
     return this.categoryService.create(dto.name);

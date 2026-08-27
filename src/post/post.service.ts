@@ -28,6 +28,11 @@ export class PostService {
    return this.repo.findByUserId(userId); 
   }
 
+  // 본인 글 목록 페이지네이션 조회
+  getMyPosts(userId: string, page = 1, limit = 10) {
+    return this.repo.findMyPostsPaginated(userId, page, limit);
+  }
+
   // 생성
   async createPost(dto: CreatePostDto) {
     const post = await this.repo.create(dto);

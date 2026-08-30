@@ -1,0 +1,25 @@
+services:
+  push-server:
+    image: yeonhyukkim/fake-push-server:latest
+    networks:
+      - board-network
+
+  board-server:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      INFOTEAM_CLIENT_ID: ${INFOTEAM_CLIENT_ID}
+      INFOTEAM_CLIENT_SECRET: ${INFOTEAM_CLIENT_SECRET}
+      PUSH_SERVER_URL: http://push-server:8090
+    depends_on:
+      - push-server
+    networks:
+      - board-network
+
+networks:
+  board-network:
+    driver: bridge

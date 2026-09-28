@@ -1,6 +1,7 @@
-import {Controller, Post, Body, Get, UseGuards, Req} from '@nestjs/common';
+import { Controller, Post, Body, Get, UseGuards, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthGuard } from '@nestjs/passport';
+import { OAuthUserDto } from './dto.auth/oauthlogin.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -16,6 +17,11 @@ export class AuthController {
     return this.auth.login(body.username, body.password);
   }
 
+  @Post('oauth')
+  oauthLogin(@Body() oauthUser: OAuthUserDto) {
+    return this.authService.oauthLogin(oauthUser);
+  }
+
   @Get('infoteam')
   @UseGuards(AuthGuard('infoteam'))
   async infoteamLogin() {
@@ -25,6 +31,6 @@ export class AuthController {
   @Get('infoteam/callback')
   @UseGuards(AuthGuard('infoteam'))
   async infoteamCallback(@Req() req) {
-  return this.auth.oauthLogin(req.user);
+    return this.auth.oauthLogin(req.user);
   }
 }

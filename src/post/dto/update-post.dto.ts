@@ -10,5 +10,6 @@ export class UpdatePostDto {
   content!: string;
 
   @IsNumber()
+  @IsNotEmpty()
   userId!: number;
 }

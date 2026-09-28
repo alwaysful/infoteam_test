@@ -42,10 +42,7 @@ export class AuthService {
       throw new UnauthorizedException('OAuth account');
     }
 
-    const isMatch = await bcrypt.compare(
-      password,
-      user.password,
-    );
+    const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
       throw new UnauthorizedException();
@@ -55,7 +52,7 @@ export class AuthService {
   }
 
   // 기존 OAuth 로그인
-  async oauthLogin(oauthUser: any) {
+  async oauthLogin(oauthUser: OAuthUserDto) {
     let user = await this.prisma.user.findFirst({
       where: {
         provider: oauthUser.provider,
@@ -80,14 +77,11 @@ export class AuthService {
   async getUserInfo(accessToken: string) {
     try {
       const response = await firstValueFrom(
-        this.httpService.get(
-          'https://api.idp.gistory.me/oauth/userInfo',
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
+        this.httpService.get('https://api.idp.gistory.me/oauth/userInfo', {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
           },
-        ),
+        }),
       );
 
       return response.data;
@@ -100,14 +94,11 @@ export class AuthService {
   async validateAccessToken(accessToken: string): Promise<boolean> {
     try {
       const response = await firstValueFrom(
-        this.httpService.get(
-          'https://api.idp.gistory.me/oauth/userInfo',
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
+        this.httpService.get('https://api.idp.gistory.me/oauth/userInfo', {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
           },
-        ),
+        }),
       );
 
       return response.status === 200;

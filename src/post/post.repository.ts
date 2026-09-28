@@ -14,7 +14,7 @@ export class PostRepository {
   }
 
   findByUserId(userId: string) {
-   return this.prisma.post.findMany({ where: { userId } });
+    return this.prisma.post.findMany({ where: { userId } });
   }
 
   // 본인 글 목록 페이지네이션
@@ -54,7 +54,7 @@ export class PostRepository {
     };
   }
 
-  create(data: any) {
+  create(data: string) {
     return this.prisma.post.create({ data });
   }
 

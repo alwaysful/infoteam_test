@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PostRepository } from './post.repository';
-import { CreatePostDto } from './dto.post/create-post.dto';
-import { UpdatePostDto } from './dto.post/update-post.dto';
+import { CreatePostDto } from './dto/create-post.dto';
+import { UpdatePostDto } from './dto/update-post.dto';
 import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
@@ -25,7 +25,7 @@ export class PostService {
 
   // userId 조회
   getPostsByUserId(userId: string) {
-   return this.repo.findByUserId(userId); 
+    return this.repo.findByUserId(userId);
   }
 
   // 본인 글 목록 페이지네이션 조회
@@ -36,11 +36,7 @@ export class PostService {
   // 생성
   async createPost(dto: CreatePostDto) {
     const post = await this.repo.create(dto);
-
-    this.notificationService.sendNotifications(
-      post.categoryId,
-    );
-
+    this.notificationService.sendNotifications(post.categoryId);
     return post;
   }
 

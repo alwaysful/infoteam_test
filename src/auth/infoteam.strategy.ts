@@ -7,8 +7,8 @@ import { ConfigService } from '@nestjs/config';
 export class InfoTeamStrategy extends PassportStrategy(Strategy, 'infoteam') {
   constructor(config: ConfigService) {
     super({
-      authorizationURL: '인포팀_AUTH_URL',
-      tokenURL: '인포팀_TOKEN_URL',
+      authorizationURL: 'INFOTEAM_AUTH_URL',
+      tokenURL: 'INFOTRAM_TOKEN_URL',
       clientID: config.get<string>('INFOTEAM_CLIENT_ID') as string,
       clientSecret: config.get<string>('INFOTEAM_CLIENT_SECRET') as string,
       callbackURL: 'http://localhost:3000/auth/infoteam/callback',

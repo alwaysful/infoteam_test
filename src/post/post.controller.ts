@@ -1,15 +1,21 @@
 import {
-  Controller, Get, Post, Put, Delete,
-  Param, Body, Query, Req
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Param,
+  Body,
+  Query,
+  Req,
 } from '@nestjs/common';
 import { PostService } from './post.service';
-import { CreatePostDto } from './dto.post/create-post.dto';
-import { UpdatePostDto } from './dto.post/update-post.dto';
-import { GetMyPostsDto } from './dto.post/get-my-posts.dto';
+import { CreatePostDto } from './dto/create-post.dto';
+import { UpdatePostDto } from './dto/update-post.dto';
+import { GetMyPostsDto } from './dto/get-my-posts.dto';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { UseGuards } from '@nestjs/common';
 import { JwtGuard } from '../auth/jwt.guard';
-
 
 @ApiTags('posts')
 @Controller('posts')
@@ -51,15 +57,16 @@ export class PostController {
   }
 
   // 수정
+  @UseGuards(JwtGuard)
   @Put(':id')
   update(@Param('id') id: string, @Body() dto: UpdatePostDto) {
     return this.service.updatePost(+id, dto);
   }
 
   // 삭제
+  @UseGuards(JwtGuard)
   @Delete(':id')
   delete(@Param('id') id: string) {
     return this.service.deletePost(+id);
   }
-
 }

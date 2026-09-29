@@ -16,6 +16,7 @@ import { GetMyPostsDto } from './dto/get-my-posts.dto';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { UseGuards } from '@nestjs/common';
 import { JwtGuard } from '../auth/jwt.guard';
+//import { GetmyStatsDto } from 'src/category/dto/get-mystats.dto';
 
 @ApiTags('posts')
 @Controller('posts')
@@ -29,11 +30,14 @@ export class PostController {
     return this.service.getPosts();
   }
 
-  // 본인 글 목록 페이지네이션 조회 (':id' 라우트보다 먼저 선언해야 함)
+  // 본인 글 목록 페이지네이션 조회
   @UseGuards(JwtGuard)
   @Get('me')
   @ApiOperation({ summary: '본인 게시글 목록 페이지네이션 조회' })
-  getMyPosts(@Req() req, @Query() dto: GetMyPostsDto) {
+  getMyPosts(
+    @Req() req: { user: { userId: string } },
+    @Query() dto: GetMyPostsDto,
+  ) {
     return this.service.getMyPosts(req.user.userId, dto.page, dto.limit);
   }
 

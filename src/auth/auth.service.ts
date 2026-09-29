@@ -4,6 +4,8 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
+import { OAuthUserDto } from './dto/oauthlogin.dto';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -108,7 +110,7 @@ export class AuthService {
   }
 
   // 우리 서버의 JWT 발급
-  private generateJwt(user: any) {
+  private generateJwt(user: User) {
     return {
       accessToken: this.jwt.sign({
         userId: user.id,

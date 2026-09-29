@@ -10,7 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { CategoryService } from './category.service';
-import { CreateCategoryDto } from './category.dto';
+import { CreateCategoryDto } from './dto/create-category.dto';
 import { JwtGuard } from '../auth/jwt.guard';
 
 @Controller('category')
@@ -31,7 +31,7 @@ export class CategoryController {
   // 본인 카테고리 구독 현황 + 카테고리별 작성한 글의 수
   @UseGuards(JwtGuard)
   @Get('me/stats')
-  async getMyStats(@Req() req) {
+  async getMyStats(@Req() req: { user: { userId: string } }) {
     return this.categoryService.getMySubscriptionStats(req.user.userId);
   }
 

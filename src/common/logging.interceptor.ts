@@ -1,25 +1,29 @@
-
 import {
   CallHandler,
   ExecutionContext,
   Injectable,
   NestInterceptor,
 } from '@nestjs/common';
+import { Request, Response } from 'express';
 import { Observable, tap } from 'rxjs';
 
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
-  intercept(
-    context: ExecutionContext,
-    next: CallHandler,
-  ): Observable<any> {
-    const request = context.switchToHttp().getRequest();
-    const response = context.switchToHttp().getResponse();
+  intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
+    const request = context.switchToHttp().getRequest<Request>();
+    const response = context.switchToHttp().getResponse<Response>();
 
-    const { method, originalUrl, query, body } = request;
+    const { method, originalUrl, query } = request;
+    const body: unknown = request.body;
 
     // Request Log
-    const requestLog: any = {
+    const requestLog: {
+      timestamp: string;
+      method: string;
+      url: string;
+      query?: unknown;
+      body?: unknown;
+    } = {
       timestamp: new Date().toISOString(),
       method,
       url: originalUrl,
@@ -39,7 +43,7 @@ export class LoggingInterceptor implements NestInterceptor {
 
     // Response Log
     return next.handle().pipe(
-      tap((responseBody) => {
+      tap((responseBody: unknown) => {
         console.log('[Response]', {
           timestamp: new Date().toISOString(),
           method,

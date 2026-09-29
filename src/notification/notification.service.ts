@@ -23,12 +23,9 @@ export class NotificationService {
         return subscriptions.map((subscription) => {
           const deviceId = randomUUID();
 
-          return this.httpService.post(
-            'http://localhost:8090/api/push',
-            {
-              deviceId,
-            },
-          );
+          return this.httpService.post('http://localhost:8090/api/push', {
+            deviceId,
+          });
         });
       });
 
@@ -43,22 +40,15 @@ export class NotificationService {
             const data = response.data;
 
             if (data.resultCode === 100) {
-              console.log(
-                `Push 성공: ${data.resultData.deviceId}`,
-              );
+              console.log(`Push 성공: ${data.resultData.deviceId}`);
             } else if (data.resultCode === -1) {
-              console.error(
-                `Push 실패: ${data.resultData.deviceId}`,
-              );
+              console.error(`Push 실패: ${data.resultData.deviceId}`);
             }
           });
         },
 
         error: (error) => {
-          console.error(
-            'Push Server 요청 중 오류 발생:',
-            error,
-          );
+          console.error('Push Server 요청 중 오류 발생:', error);
         },
       });
     });

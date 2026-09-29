@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { PrismaClient, Prisma } from '@prisma/client';
 
 @Injectable()
 export class PostRepository {
@@ -54,12 +55,15 @@ export class PostRepository {
     };
   }
 
-  create(data: string) {
+  create(data: Prisma.PostCreateInput) {
     return this.prisma.post.create({ data });
   }
 
-  update(id: number, data: any) {
-    return this.prisma.post.update({ where: { id }, data });
+  update(id: number, data: Prisma.PostUpdateInput) {
+    return this.prisma.post.update({
+      where: { id },
+      data,
+    });
   }
 
   delete(id: number) {

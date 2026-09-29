@@ -21,11 +21,7 @@ import { HttpModule } from '@nestjs/axios';
 
     PassportModule,
   ],
-  providers: [
-    AuthService,
-    JwtStrategy,
-    InfoTeamStrategy,
-  ],
+  providers: [AuthService, JwtStrategy, InfoTeamStrategy],
   controllers: [AuthController],
 })
 export class AuthModule {}

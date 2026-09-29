@@ -12,9 +12,9 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       scope: ['email', 'profile'],
     });
   }
-//아직 못받음
+  //아직 못받음
 
-  async validate(accessToken: string, refreshToken: string, profile: Profile) {
+  validate(accessToken: string, refreshToken: string, profile: Profile) {
     return {
       email: profile.emails?.[0]?.value,
       name: profile.displayName,

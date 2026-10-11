@@ -1,5 +1,5 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
+import { AuthRepository } from './auth.repository';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { HttpService } from '@nestjs/axios';
@@ -10,7 +10,7 @@ import { User } from '@prisma/client';
 @Injectable()
 export class AuthService {
   constructor(
-    private prisma: PrismaService,
+    private authRepository: AuthRepository,
     private jwt: JwtService,
     private readonly httpService: HttpService,
   ) {}
@@ -19,21 +19,17 @@ export class AuthService {
   async signup(email: string, password: string, username?: string) {
     const hashed = await bcrypt.hash(password, 10);
 
-    return this.prisma.user.create({
-      data: {
-        email,
-        username,
-        password: hashed,
-        provider: 'local',
-      },
+    return this.authRepository.create({
+      email,
+      username,
+      password: hashed,
+      provider: 'local',
     });
   }
 
   // 기존 로컬 로그인
   async login(email: string, password: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { email },
-    });
+    const user = await this.authRepository.findByEmail(email);
 
     if (!user) {
       throw new UnauthorizedException();
@@ -55,20 +51,16 @@ export class AuthService {
 
   // 기존 OAuth 로그인
   async oauthLogin(oauthUser: OAuthUserDto) {
-    let user = await this.prisma.user.findFirst({
-      where: {
-        provider: oauthUser.provider,
-        sub: oauthUser.providerId,
-      },
-    });
+    let user = await this.authRepository.findByProvider(
+      oauthUser.provider,
+      oauthUser.providerId,
+    );
 
     if (!user) {
-      user = await this.prisma.user.create({
-        data: {
-          email: oauthUser.email,
-          provider: oauthUser.provider,
-          sub: oauthUser.providerId,
-        },
+      user = await this.authRepository.create({
+        email: oauthUser.email,
+        provider: oauthUser.provider,
+        sub: oauthUser.providerId,
       });
     }
 

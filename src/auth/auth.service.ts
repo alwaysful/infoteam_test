@@ -6,6 +6,8 @@ import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { OAuthUserDto } from './dto/oauthlogin.dto';
 import { User } from '@prisma/client';
+import { TokenResponseDto } from './dto/token-response.dto';
+import { UserResponseDto } from './dto/user-response.dto';
 
 @Injectable()
 export class AuthService {
@@ -16,19 +18,25 @@ export class AuthService {
   ) {}
 
   // 기존 회원가입
-  async signup(email: string, password: string, username?: string) {
+  async signup(
+    email: string,
+    password: string,
+    username?: string,
+  ): Promise<UserResponseDto> {
     const hashed = await bcrypt.hash(password, 10);
 
-    return this.authRepository.create({
+    const user = await this.authRepository.create({
       email,
       username,
       password: hashed,
       provider: 'local',
     });
+
+    return UserResponseDto.from(user);
   }
 
   // 기존 로컬 로그인
-  async login(email: string, password: string) {
+  async login(email: string, password: string): Promise<TokenResponseDto> {
     const user = await this.authRepository.findByEmail(email);
 
     if (!user) {
@@ -50,7 +58,7 @@ export class AuthService {
   }
 
   // 기존 OAuth 로그인
-  async oauthLogin(oauthUser: OAuthUserDto) {
+  async oauthLogin(oauthUser: OAuthUserDto): Promise<TokenResponseDto> {
     let user = await this.authRepository.findByProvider(
       oauthUser.provider,
       oauthUser.providerId,
@@ -102,7 +110,7 @@ export class AuthService {
   }
 
   // 우리 서버의 JWT 발급
-  private generateJwt(user: User) {
+  private generateJwt(user: User): TokenResponseDto {
     return {
       accessToken: this.jwt.sign({
         userId: user.id,

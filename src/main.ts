@@ -4,6 +4,7 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { HttpExceptionFilter } from './common/exception.filter';
+import { LoggingInterceptor } from './common/logging.interceptor';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
@@ -19,6 +20,9 @@ async function bootstrap(): Promise<void> {
 
   // Error handling (HttpException + Prisma 에러 변환)
   app.useGlobalFilters(new HttpExceptionFilter());
+
+  // 요청/응답 로깅 (비밀번호, 토큰은 마스킹)
+  app.useGlobalInterceptors(new LoggingInterceptor());
 
   // Swagger
   const config = new DocumentBuilder()

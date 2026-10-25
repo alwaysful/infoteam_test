@@ -21,14 +21,14 @@ export class AuthController {
   @Post('signup')
   @ApiCreatedResponse({ type: UserResponseDto })
   signup(@Body() body: CreateUserDto) {
-    return this.auth.signup(body.username, body.password);
+    return this.auth.signup(body.email, body.password, body.username);
   }
 
   @Post('login')
   @ApiCreatedResponse({ type: TokenResponseDto })
   @ApiUnauthorizedResponse({ type: ErrorResponseDto })
   login(@Body() body: LoginDto) {
-    return this.auth.login(body.username, body.password);
+    return this.auth.login(body.email, body.password);
   }
 
   @Post('oauth')

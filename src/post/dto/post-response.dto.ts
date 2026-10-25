@@ -20,6 +20,9 @@ export class PostResponseDto {
   @ApiProperty({ type: String, format: 'date-time' })
   createdAt!: Date;
 
+  @ApiProperty({ type: String, format: 'date-time' })
+  updatedAt!: Date;
+
   static from(post: Post): PostResponseDto {
     const dto = new PostResponseDto();
     dto.id = post.id;
@@ -28,6 +31,7 @@ export class PostResponseDto {
     dto.userId = post.userId;
     dto.categoryId = post.categoryId;
     dto.createdAt = post.createdAt;
+    dto.updatedAt = post.updatedAt;
     return dto;
   }
 }

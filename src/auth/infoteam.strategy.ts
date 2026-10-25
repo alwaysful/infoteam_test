@@ -8,10 +8,10 @@ import { Profile } from 'passport';
 export class InfoTeamStrategy extends PassportStrategy(Strategy, 'infoteam') {
   constructor(config: ConfigService) {
     super({
-      authorizationURL: 'INFOTEAM_AUTH_URL',
-      tokenURL: 'INFOTEAM_TOKEN_URL',
-      clientID: config.get<string>('INFOTEAM_CLIENT_ID') as string,
-      clientSecret: config.get<string>('INFOTEAM_CLIENT_SECRET') as string,
+      authorizationURL: config.getOrThrow<string>('INFOTEAM_AUTH_URL'),
+      tokenURL: config.getOrThrow<string>('INFOTEAM_TOKEN_URL'),
+      clientID: config.getOrThrow<string>('INFOTEAM_CLIENT_ID'),
+      clientSecret: config.getOrThrow<string>('INFOTEAM_CLIENT_SECRET'),
       callbackURL: 'http://localhost:3000/auth/infoteam/callback',
       scope: ['profile'],
     });

@@ -1,21 +1,18 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
-import { PrismaClient, Prisma } from '@prisma/client';
 
 @Injectable()
 export class PostRepository {
   constructor(private prisma: PrismaService) {}
 
-  findAll() {
-    return this.prisma.post.findMany();
+  // userId가 없으면 전체, 있으면 해당 유저의 글만 (undefined 조건은 Prisma가 무시)
+  findAll(userId?: string) {
+    return this.prisma.post.findMany({ where: { userId } });
   }
 
   findById(id: number) {
     return this.prisma.post.findUnique({ where: { id } });
-  }
-
-  findByUserId(userId: string) {
-    return this.prisma.post.findMany({ where: { userId } });
   }
 
   // 본인 글 목록 페이지네이션
@@ -38,6 +35,7 @@ export class PostRepository {
           content: true,
           categoryId: true,
           createdAt: true,
+          updatedAt: true,
         },
       }),
 
@@ -59,11 +57,12 @@ export class PostRepository {
     };
   }
 
-  create(data: Prisma.PostCreateInput) {
+  create(data: Prisma.PostUncheckedCreateInput) {
     return this.prisma.post.create({ data });
   }
 
-  update(id: number, data: Prisma.PostUpdateInput) {
+  // updatedAt은 Prisma(@updatedAt)가 자동으로 갱신
+  update(id: number, data: Prisma.PostUncheckedUpdateInput) {
     return this.prisma.post.update({
       where: { id },
       data,

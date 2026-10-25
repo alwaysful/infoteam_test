@@ -1,15 +1,5 @@
-import { IsString, IsNotEmpty, IsNumber } from 'class-validator';
+import { PartialType } from '@nestjs/swagger';
+import { CreatePostDto } from './create-post.dto';
 
-export class UpdatePostDto {
-  @IsString()
-  @IsNotEmpty()
-  title!: string;
-
-  @IsString()
-  @IsNotEmpty()
-  content!: string;
-
-  @IsNumber()
-  @IsNotEmpty()
-  userId!: number;
-}
+// PATCH: 생성 DTO의 모든 필드를 선택값으로 (검증 규칙과 Swagger 문서 모두 상속)
+export class UpdatePostDto extends PartialType(CreatePostDto) {}

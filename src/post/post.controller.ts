@@ -1,94 +1,118 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
-  Param,
   Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
   Query,
   Req,
+  UseGuards,
 } from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiForbiddenResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 import { PostService } from './post.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { GetMyPostsDto } from './dto/get-my-posts.dto';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiOkResponse,
-  ApiCreatedResponse,
-  ApiNotFoundResponse,
-} from '@nestjs/swagger';
-import { UseGuards } from '@nestjs/common';
+import { GetPostsDto } from './dto/get-posts.dto';
 import { JwtGuard } from '../auth/jwt.guard';
 import { PostResponseDto } from './dto/post-response.dto';
 import { MyPostsResponseDto } from './dto/my-posts-response.dto';
 import { ErrorResponseDto } from '../common/dto/error-response.dto';
+
+type AuthRequest = { user: { userId: string } };
 
 @ApiTags('posts')
 @Controller('posts')
 export class PostController {
   constructor(private readonly service: PostService) {}
 
-  // 전체 조회
+  // 전체 조회 (?userId= 로 특정 유저의 글만 조회)
   @Get()
-  @ApiOperation({ summary: '전체 게시글 조회' })
+  @ApiOperation({ summary: '게시글 조회 (userId로 작성자 필터링 가능)' })
   @ApiOkResponse({ type: PostResponseDto, isArray: true })
-  getPosts() {
-    return this.service.getPosts();
+  getPosts(@Query() dto: GetPostsDto): Promise<PostResponseDto[]> {
+    return this.service.getPosts(dto.userId);
   }
 
   // 본인 글 목록 페이지네이션 조회
+  @ApiBearerAuth()
   @UseGuards(JwtGuard)
   @Get('me')
   @ApiOperation({ summary: '본인 게시글 목록 페이지네이션 조회' })
   @ApiOkResponse({ type: MyPostsResponseDto })
+  @ApiUnauthorizedResponse({ type: ErrorResponseDto })
   getMyPosts(
-    @Req() req: { user: { userId: string } },
+    @Req() req: AuthRequest,
     @Query() dto: GetMyPostsDto,
-  ) {
+  ): Promise<MyPostsResponseDto> {
     return this.service.getMyPosts(req.user.userId, dto.page, dto.limit);
-  }
-
-  // userId 조회
-  @Get('/user')
-  @ApiOkResponse({ type: PostResponseDto, isArray: true })
-  getByUser(@Query('userId') userId: string) {
-    return this.service.getPostsByUserId(userId);
   }
 
   // ID 조회
   @Get(':id')
+  @ApiOperation({ summary: '게시글 단건 조회' })
   @ApiOkResponse({ type: PostResponseDto })
   @ApiNotFoundResponse({ type: ErrorResponseDto })
-  getPostById(@Param('id') id: string) {
-    return this.service.getPostById(+id);
+  getPostById(@Param('id', ParseIntPipe) id: number): Promise<PostResponseDto> {
+    return this.service.getPostById(id);
   }
 
   // 생성
+  @ApiBearerAuth()
   @UseGuards(JwtGuard)
   @Post()
+  @ApiOperation({ summary: '게시글 생성' })
   @ApiCreatedResponse({ type: PostResponseDto })
-  create(@Body() dto: CreatePostDto) {
-    return this.service.createPost(dto);
+  @ApiUnauthorizedResponse({ type: ErrorResponseDto })
+  create(
+    @Req() req: AuthRequest,
+    @Body() dto: CreatePostDto,
+  ): Promise<PostResponseDto> {
+    return this.service.createPost(req.user.userId, dto);
   }
 
-  // 수정
+  // 부분 수정
+  @ApiBearerAuth()
   @UseGuards(JwtGuard)
-  @Put(':id')
+  @Patch(':id')
+  @ApiOperation({ summary: '게시글 부분 수정 (본인 글만)' })
   @ApiOkResponse({ type: PostResponseDto })
+  @ApiUnauthorizedResponse({ type: ErrorResponseDto })
+  @ApiForbiddenResponse({ type: ErrorResponseDto })
   @ApiNotFoundResponse({ type: ErrorResponseDto })
-  update(@Param('id') id: string, @Body() dto: UpdatePostDto) {
-    return this.service.updatePost(+id, dto);
+  update(
+    @Req() req: AuthRequest,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdatePostDto,
+  ): Promise<PostResponseDto> {
+    return this.service.updatePost(id, req.user.userId, dto);
   }
 
   // 삭제
+  @ApiBearerAuth()
   @UseGuards(JwtGuard)
   @Delete(':id')
+  @ApiOperation({ summary: '게시글 삭제 (본인 글만)' })
   @ApiOkResponse({ type: PostResponseDto })
+  @ApiUnauthorizedResponse({ type: ErrorResponseDto })
+  @ApiForbiddenResponse({ type: ErrorResponseDto })
   @ApiNotFoundResponse({ type: ErrorResponseDto })
-  delete(@Param('id') id: string) {
-    return this.service.deletePost(+id);
+  delete(
+    @Req() req: AuthRequest,
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<PostResponseDto> {
+    return this.service.deletePost(id, req.user.userId);
   }
 }

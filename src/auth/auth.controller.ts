@@ -15,7 +15,6 @@ import { ErrorResponseDto } from '../common/dto/error-response.dto';
 
 @Controller('auth')
 export class AuthController {
-  authService: any;
   constructor(private auth: AuthService) {}
 
   @Post('signup')
@@ -34,7 +33,7 @@ export class AuthController {
   @Post('oauth')
   @ApiCreatedResponse({ type: TokenResponseDto })
   oauthLogin(@Body() oauthUser: OAuthUserDto) {
-    return this.authService.oauthLogin(oauthUser);
+    return this.auth.oauthLogin(oauthUser);
   }
 
   @Get('infoteam')

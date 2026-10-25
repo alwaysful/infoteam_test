@@ -15,6 +15,7 @@ import { Prisma, User } from '@prisma/client';
 import { OAuthUserDto } from './dto/oauthlogin.dto';
 import { TokenResponseDto } from './dto/token-response.dto';
 import { UserResponseDto } from './dto/user-response.dto';
+import { UserInfoDto } from './dto/get-userinfo.dto';
 import { ConfigService } from '@nestjs/config';
 
 // 유저가 없을 때도 bcrypt 비교를 수행해 응답 시간 차이를 줄이기 위한 더미 해시
@@ -124,14 +125,14 @@ export class AuthService {
   }
 
   // IDP userInfo 호출 (공통)
-  private async fetchUserInfo(accessToken: string) {
+  private async fetchUserInfo(accessToken: string): Promise<UserInfoDto> {
     if (!accessToken) {
       throw new UnauthorizedException('Invalid access token');
     }
 
     try {
       const response = await firstValueFrom(
-        this.httpService.get(this.idpUserInfoUrl, {
+        this.httpService.get<UserInfoDto>(this.idpUserInfoUrl, {
           headers: { Authorization: `Bearer ${accessToken}` },
           timeout: this.httpTimeoutMs,
         }),

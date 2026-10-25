@@ -5,6 +5,12 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { firstValueFrom } from 'rxjs';
 import { randomUUID } from 'crypto';
 
+// Push Server 응답 형식
+interface PushResponse {
+  resultCode: number;
+  resultData: { deviceId: string };
+}
+
 @Injectable()
 export class NotificationService {
   private readonly logger = new Logger(NotificationService.name);
@@ -34,7 +40,7 @@ export class NotificationService {
       subscriptions.map(() => {
         const deviceId = randomUUID();
         return firstValueFrom(
-          this.httpService.post(this.pushUrl, {
+          this.httpService.post<PushResponse>(this.pushUrl, {
             deviceId,
           }),
         );

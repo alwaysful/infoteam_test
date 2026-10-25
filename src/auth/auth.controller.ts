@@ -15,6 +15,7 @@ import { ErrorResponseDto } from '../common/dto/error-response.dto';
 
 @Controller('auth')
 export class AuthController {
+  authService: any;
   constructor(private auth: AuthService) {}
 
   @Post('signup')

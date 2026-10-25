@@ -18,9 +18,6 @@ import { UserResponseDto } from './dto/user-response.dto';
 import { UserInfoDto } from './dto/get-userinfo.dto';
 import { ConfigService } from '@nestjs/config';
 
-// 유저가 없을 때도 bcrypt 비교를 수행해 응답 시간 차이를 줄이기 위한 더미 해시
-const DUMMY_HASH = bcrypt.hashSync('dummy-password', 10);
-
 function isUniqueViolation(e: unknown): boolean {
   return (
     e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002'
@@ -32,6 +29,9 @@ export class AuthService {
   private readonly logger = new Logger(AuthService.name);
   private readonly idpUserInfoUrl: string;
   private readonly httpTimeoutMs: number;
+  private readonly saltRounds: number;
+  // 유저가 없을 때도 bcrypt 비교를 수행해 응답 시간 차이를 줄이기 위한 더미 해시
+  private readonly dummyHash: string;
 
   constructor(
     private authRepository: AuthRepository,
@@ -41,6 +41,8 @@ export class AuthService {
   ) {
     this.idpUserInfoUrl = this.config.getOrThrow<string>('IDP_USERINFO_URL');
     this.httpTimeoutMs = Number(this.config.get('IDP_HTTP_TIMEOUT_MS') ?? 5000);
+    this.saltRounds = Number(this.config.get('BCRYPT_SALT_ROUNDS') ?? 10);
+    this.dummyHash = bcrypt.hashSync('dummy-password', this.saltRounds);
   }
   private normalizeEmail(email: string): string {
     return email.trim().toLowerCase();
@@ -52,7 +54,7 @@ export class AuthService {
     password: string,
     username?: string,
   ): Promise<UserResponseDto> {
-    const hashed = await bcrypt.hash(password, 10);
+    const hashed = await bcrypt.hash(password, this.saltRounds);
 
     try {
       const user = await this.authRepository.create({
@@ -77,7 +79,7 @@ export class AuthService {
     );
 
     // 유저 없음 / OAuth 계정(비밀번호 없음) / 비밀번호 불일치를 구분하지 않는다
-    const hashToCompare = user?.password ?? DUMMY_HASH;
+    const hashToCompare = user?.password ?? this.dummyHash;
     const isMatch = await bcrypt.compare(password, hashToCompare);
 
     if (!user || !user.password || !isMatch) {

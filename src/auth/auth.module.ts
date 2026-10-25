@@ -3,7 +3,7 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { AuthRepository } from './auth.repository';
 import { PrismaModule } from '../../prisma/prisma.module';
-import { JwtModule } from '@nestjs/jwt';
+import { JwtModule, JwtSignOptions } from '@nestjs/jwt';
 import { JwtStrategy } from './jwt.strategy';
 import { PassportModule } from '@nestjs/passport';
 import { InfoTeamStrategy } from './infoteam.strategy';
@@ -21,7 +21,13 @@ import { ConfigService } from '@nestjs/config';
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         secret: config.getOrThrow<string>('JWT_SECRET'),
-        signOptions: { expiresIn: '1h' },
+        signOptions: {
+          // 예: 1h, 30m, 7d (단위 없는 숫자는 밀리초로 해석되므로 단위를 붙인다)
+          expiresIn: config.get<string>(
+            'JWT_EXPIRES_IN',
+            '1h',
+          ) as JwtSignOptions['expiresIn'],
+        },
       }),
     }),
 

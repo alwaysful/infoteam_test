@@ -12,7 +12,7 @@ export class InfoTeamStrategy extends PassportStrategy(Strategy, 'infoteam') {
       tokenURL: config.getOrThrow<string>('INFOTEAM_TOKEN_URL'),
       clientID: config.getOrThrow<string>('INFOTEAM_CLIENT_ID'),
       clientSecret: config.getOrThrow<string>('INFOTEAM_CLIENT_SECRET'),
-      callbackURL: 'http://localhost:3000/auth/infoteam/callback',
+      callbackURL: config.getOrThrow<string>('INFOTEAM_CALLBACK_URL'),
       scope: ['profile'],
     });
   }

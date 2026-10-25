@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PostRepository } from './post.repository';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
@@ -8,6 +8,8 @@ import { MyPostsResponseDto } from './dto/my-posts-response.dto';
 
 @Injectable()
 export class PostService {
+  private readonly logger = new Logger(PostService.name);
+
   constructor(
     private readonly repo: PostRepository,
     private readonly notificationService: NotificationService,
@@ -44,7 +46,15 @@ export class PostService {
   // 생성
   async createPost(dto: CreatePostDto): Promise<PostResponseDto> {
     const post = await this.repo.create(dto);
-    this.notificationService.sendNotifications(post.categoryId);
+    // 알림 실패가 글 생성 응답에 영향을 주지 않도록 기다리지 않되, 에러는 반드시 처리
+    this.notificationService
+      .sendNotifications(post.categoryId)
+      .catch((error: unknown) => {
+        this.logger.error(
+          '알림 전송 실패',
+          error instanceof Error ? error.stack : String(error),
+        );
+      });
     return PostResponseDto.from(post);
   }
 

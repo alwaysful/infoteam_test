@@ -1,24 +1,27 @@
 import { Injectable } from '@nestjs/common';
+import { Category } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { CategoryStatsResponseDto } from './dto/category-stats-response.dto';
+import { MyCategoryStatsResponseDto } from './dto/my-category-stats-response.dto';
 
 @Injectable()
 export class CategoryRepository {
   constructor(private prisma: PrismaService) {}
 
-  findAll() {
+  findAll(): Promise<Category[]> {
     return this.prisma.category.findMany({ orderBy: { id: 'asc' } });
   }
 
-  create(name: string) {
+  create(name: string): Promise<Category> {
     return this.prisma.category.create({ data: { name } });
   }
 
-  delete(id: number) {
+  delete(id: number): Promise<Category> {
     return this.prisma.category.delete({ where: { id } });
   }
 
   // 카테고리별 게시물 수 + 구독자 수 집계
-  async findCategoryStats() {
+  async findCategoryStats(): Promise<CategoryStatsResponseDto[]> {
     const categories = await this.prisma.category.findMany({
       orderBy: {
         id: 'asc',
@@ -42,7 +45,9 @@ export class CategoryRepository {
   }
 
   // 본인 카테고리 구독 현황 + 카테고리별 작성한 글의 수
-  async findMySubscriptionStats(userId: string) {
+  async findMySubscriptionStats(
+    userId: string,
+  ): Promise<MyCategoryStatsResponseDto[]> {
     const categories = await this.prisma.category.findMany({
       orderBy: {
         id: 'asc',

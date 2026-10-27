@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import { ValidationPipe } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { HttpExceptionFilter } from './common/exception.filter';
 import { LoggingInterceptor } from './common/logging.interceptor';
@@ -24,6 +24,9 @@ async function bootstrap(): Promise<void> {
   // 요청/응답 로깅 (비밀번호, 토큰은 마스킹)
   app.useGlobalInterceptors(new LoggingInterceptor());
 
+  // 종료 시그널에서 onModuleDestroy(Prisma 연결 해제)가 실행되도록 설정
+  app.enableShutdownHooks();
+
   // Swagger
   const config = new DocumentBuilder()
     .setTitle('게시판 API')
@@ -35,6 +38,13 @@ async function bootstrap(): Promise<void> {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  await app.listen(Number(configService.get('PORT') ?? 3000));
+  await app.listen(configService.getOrThrow<number>('PORT'));
 }
-void bootstrap();
+
+bootstrap().catch((error: unknown) => {
+  new Logger('Bootstrap').error(
+    '서버 시작 실패',
+    error instanceof Error ? error.stack : String(error),
+  );
+  process.exit(1);
+});

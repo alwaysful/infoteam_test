@@ -20,6 +20,7 @@ import {
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
+  ApiParam,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
@@ -36,7 +37,7 @@ export class CategoryController {
   @Get()
   @ApiOperation({ summary: '카테고리 전체 조회' })
   @ApiOkResponse({ type: CategoryResponseDto, isArray: true })
-  findAll() {
+  findAll(): Promise<CategoryResponseDto[]> {
     return this.categoryService.findAll();
   }
 
@@ -44,7 +45,7 @@ export class CategoryController {
   @Get('stats')
   @ApiOperation({ summary: '카테고리별 게시물 수 + 구독자 수 조회' })
   @ApiOkResponse({ type: CategoryStatsResponseDto, isArray: true })
-  async getCategoryStats() {
+  async getCategoryStats(): Promise<CategoryStatsResponseDto[]> {
     return this.categoryService.getCategoryStats();
   }
 
@@ -55,7 +56,9 @@ export class CategoryController {
   @ApiOperation({ summary: '본인 카테고리 구독 현황 + 작성한 글 수 조회' })
   @ApiOkResponse({ type: MyCategoryStatsResponseDto, isArray: true })
   @ApiUnauthorizedResponse({ type: ErrorResponseDto })
-  async getMyStats(@Req() req: { user: { userId: string } }) {
+  async getMyStats(
+    @Req() req: { user: { userId: string } },
+  ): Promise<MyCategoryStatsResponseDto[]> {
     return this.categoryService.getMySubscriptionStats(req.user.userId);
   }
 
@@ -64,19 +67,21 @@ export class CategoryController {
   @ApiCreatedResponse({ type: CategoryResponseDto })
   @ApiBadRequestResponse({ type: ErrorResponseDto })
   @ApiConflictResponse({ type: ErrorResponseDto })
-  create(@Body() dto: CreateCategoryDto) {
+  create(@Body() dto: CreateCategoryDto): Promise<CategoryResponseDto> {
     return this.categoryService.create(dto.name);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: '카테고리 삭제' })
+  @ApiParam({ name: 'id', description: '카테고리 ID', example: 1 })
   @ApiOkResponse({ type: CategoryResponseDto })
+  @ApiBadRequestResponse({ type: ErrorResponseDto })
   @ApiNotFoundResponse({ type: ErrorResponseDto })
   @ApiConflictResponse({
     type: ErrorResponseDto,
     description: '게시글/구독이 참조 중인 카테고리',
   })
-  remove(@Param('id', ParseIntPipe) id: number) {
+  remove(@Param('id', ParseIntPipe) id: number): Promise<CategoryResponseDto> {
     return this.categoryService.remove(id);
   }
 }

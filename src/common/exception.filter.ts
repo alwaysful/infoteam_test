@@ -81,6 +81,15 @@ export class HttpExceptionFilter implements ExceptionFilter {
       };
     }
 
+    // DB 연결 실패 등 Prisma 초기화 오류는 503으로 응답
+    if (exception instanceof Prisma.PrismaClientInitializationError) {
+      return {
+        statusCode: HttpStatus.SERVICE_UNAVAILABLE,
+        message: '데이터베이스에 연결할 수 없습니다.',
+        error: 'Service Unavailable',
+      };
+    }
+
     return {
       statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
       message: 'Internal server error',

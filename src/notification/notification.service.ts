@@ -49,15 +49,22 @@ export class NotificationService {
 
     for (const result of results) {
       if (result.status === 'rejected') {
-        this.logger.error('Push Server 요청 중 오류 발생', result.reason);
+        this.logger.error(
+          'Push Server 요청 중 오류 발생',
+          result.reason instanceof Error
+            ? result.reason.stack
+            : String(result.reason),
+        );
         continue;
       }
 
-      const data = result.value.data;
-      if (data.resultCode === 100) {
-        this.logger.log(`Push 성공: ${data.resultData.deviceId}`);
-      } else if (data.resultCode === -1) {
-        this.logger.error(`Push 실패: ${data.resultData.deviceId}`);
+      const { resultCode, resultData } = result.value.data;
+      if (resultCode === 100) {
+        this.logger.log(`Push 성공: ${resultData.deviceId}`);
+      } else {
+        this.logger.error(
+          `Push 실패 (resultCode=${resultCode}): ${resultData.deviceId}`,
+        );
       }
     }
   }

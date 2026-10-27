@@ -11,6 +11,7 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiResponse,
+  ApiServiceUnavailableResponse,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
@@ -28,7 +29,7 @@ export class AuthController {
   @ApiCreatedResponse({ type: UserResponseDto })
   @ApiBadRequestResponse({ type: ErrorResponseDto })
   @ApiConflictResponse({ type: ErrorResponseDto })
-  signup(@Body() body: CreateUserDto) {
+  signup(@Body() body: CreateUserDto): Promise<UserResponseDto> {
     return this.auth.signup(body.email, body.password, body.username);
   }
 
@@ -37,7 +38,7 @@ export class AuthController {
   @ApiCreatedResponse({ type: TokenResponseDto })
   @ApiBadRequestResponse({ type: ErrorResponseDto })
   @ApiUnauthorizedResponse({ type: ErrorResponseDto })
-  login(@Body() body: LoginDto) {
+  login(@Body() body: LoginDto): Promise<TokenResponseDto> {
     return this.auth.login(body.email, body.password);
   }
 
@@ -46,7 +47,7 @@ export class AuthController {
   @ApiCreatedResponse({ type: TokenResponseDto })
   @ApiBadRequestResponse({ type: ErrorResponseDto })
   @ApiConflictResponse({ type: ErrorResponseDto })
-  oauthLogin(@Body() oauthUser: OAuthUserDto) {
+  oauthLogin(@Body() oauthUser: OAuthUserDto): Promise<TokenResponseDto> {
     return this.auth.oauthLogin(oauthUser);
   }
 
@@ -54,16 +55,22 @@ export class AuthController {
   @ApiOperation({ summary: 'InfoTeam 로그인 페이지로 리다이렉트' })
   @ApiResponse({ status: 302, description: 'InfoTeam 로그인 페이지로 이동' })
   @UseGuards(AuthGuard('infoteam'))
-  async infoteamLogin() {
-    // redirect to infoteam login page
+  infoteamLogin(): void {
+    // Guard가 InfoTeam 로그인 페이지로 리다이렉트한다
   }
 
   @Get('infoteam/callback')
   @ApiOperation({ summary: 'InfoTeam OAuth 콜백 (JWT 발급)' })
   @ApiOkResponse({ type: TokenResponseDto })
   @ApiUnauthorizedResponse({ type: ErrorResponseDto })
+  @ApiServiceUnavailableResponse({
+    type: ErrorResponseDto,
+    description: '인증 서버(IDP)와 통신할 수 없음',
+  })
   @UseGuards(AuthGuard('infoteam'))
-  async infoteamCallback(@Req() req: { user: OAuthUserDto }) {
+  infoteamCallback(
+    @Req() req: { user: OAuthUserDto },
+  ): Promise<TokenResponseDto> {
     return this.auth.oauthLogin(req.user);
   }
 }

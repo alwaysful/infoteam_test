@@ -12,12 +12,14 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import {
+  ApiBadRequestResponse,
   ApiBearerAuth,
   ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
+  ApiParam,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
@@ -42,6 +44,7 @@ export class PostController {
   @Get()
   @ApiOperation({ summary: '게시글 조회 (userId로 작성자 필터링 가능)' })
   @ApiOkResponse({ type: PostResponseDto, isArray: true })
+  @ApiBadRequestResponse({ type: ErrorResponseDto })
   getPosts(@Query() dto: GetPostsDto): Promise<PostResponseDto[]> {
     return this.service.getPosts(dto.userId);
   }
@@ -52,6 +55,7 @@ export class PostController {
   @Get('me')
   @ApiOperation({ summary: '본인 게시글 목록 페이지네이션 조회' })
   @ApiOkResponse({ type: MyPostsResponseDto })
+  @ApiBadRequestResponse({ type: ErrorResponseDto })
   @ApiUnauthorizedResponse({ type: ErrorResponseDto })
   getMyPosts(
     @Req() req: AuthRequest,
@@ -63,7 +67,9 @@ export class PostController {
   // ID 조회
   @Get(':id')
   @ApiOperation({ summary: '게시글 단건 조회' })
+  @ApiParam({ name: 'id', description: '게시글 ID', example: 1 })
   @ApiOkResponse({ type: PostResponseDto })
+  @ApiBadRequestResponse({ type: ErrorResponseDto })
   @ApiNotFoundResponse({ type: ErrorResponseDto })
   getPostById(@Param('id', ParseIntPipe) id: number): Promise<PostResponseDto> {
     return this.service.getPostById(id);
@@ -75,6 +81,7 @@ export class PostController {
   @Post()
   @ApiOperation({ summary: '게시글 생성' })
   @ApiCreatedResponse({ type: PostResponseDto })
+  @ApiBadRequestResponse({ type: ErrorResponseDto })
   @ApiUnauthorizedResponse({ type: ErrorResponseDto })
   create(
     @Req() req: AuthRequest,
@@ -88,7 +95,9 @@ export class PostController {
   @UseGuards(JwtGuard)
   @Patch(':id')
   @ApiOperation({ summary: '게시글 부분 수정 (본인 글만)' })
+  @ApiParam({ name: 'id', description: '게시글 ID', example: 1 })
   @ApiOkResponse({ type: PostResponseDto })
+  @ApiBadRequestResponse({ type: ErrorResponseDto })
   @ApiUnauthorizedResponse({ type: ErrorResponseDto })
   @ApiForbiddenResponse({ type: ErrorResponseDto })
   @ApiNotFoundResponse({ type: ErrorResponseDto })
@@ -105,7 +114,9 @@ export class PostController {
   @UseGuards(JwtGuard)
   @Delete(':id')
   @ApiOperation({ summary: '게시글 삭제 (본인 글만)' })
+  @ApiParam({ name: 'id', description: '게시글 ID', example: 1 })
   @ApiOkResponse({ type: PostResponseDto })
+  @ApiBadRequestResponse({ type: ErrorResponseDto })
   @ApiUnauthorizedResponse({ type: ErrorResponseDto })
   @ApiForbiddenResponse({ type: ErrorResponseDto })
   @ApiNotFoundResponse({ type: ErrorResponseDto })

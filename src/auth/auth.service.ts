@@ -2,6 +2,7 @@ import {
   ConflictException,
   Injectable,
   Logger,
+  OnModuleInit,
   ServiceUnavailableException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -25,13 +26,13 @@ function isUniqueViolation(e: unknown): boolean {
 }
 
 @Injectable()
-export class AuthService {
+export class AuthService implements OnModuleInit {
   private readonly logger = new Logger(AuthService.name);
   private readonly idpUserInfoUrl: string;
   private readonly httpTimeoutMs: number;
   private readonly saltRounds: number;
   // 유저가 없을 때도 bcrypt 비교를 수행해 응답 시간 차이를 줄이기 위한 더미 해시
-  private readonly dummyHash: string;
+  private dummyHash!: string;
 
   constructor(
     private authRepository: AuthRepository,
@@ -40,10 +41,15 @@ export class AuthService {
     private readonly config: ConfigService,
   ) {
     this.idpUserInfoUrl = this.config.getOrThrow<string>('IDP_USERINFO_URL');
-    this.httpTimeoutMs = Number(this.config.get('IDP_HTTP_TIMEOUT_MS') ?? 5000);
-    this.saltRounds = Number(this.config.get('BCRYPT_SALT_ROUNDS') ?? 10);
-    this.dummyHash = bcrypt.hashSync('dummy-password', this.saltRounds);
+    this.httpTimeoutMs = this.config.getOrThrow<number>('IDP_HTTP_TIMEOUT_MS');
+    this.saltRounds = this.config.getOrThrow<number>('BCRYPT_SALT_ROUNDS');
   }
+
+  // 이벤트 루프를 막지 않도록 더미 해시는 기동 시 비동기로 생성한다
+  async onModuleInit(): Promise<void> {
+    this.dummyHash = await bcrypt.hash('dummy-password', this.saltRounds);
+  }
+
   private normalizeEmail(email: string): string {
     return email.trim().toLowerCase();
   }
@@ -141,7 +147,8 @@ export class AuthService {
       );
       return response.data;
     } catch (error) {
-      const status = (error as AxiosError).response?.status;
+      const status =
+        error instanceof AxiosError ? error.response?.status : undefined;
 
       // 토큰 자체가 잘못된 경우만 401
       if (status === 400 || status === 401 || status === 403) {
@@ -151,14 +158,14 @@ export class AuthService {
       // 타임아웃, 네트워크 오류, IDP 5xx 등
       this.logger.error(
         `IDP userInfo 호출 실패 (status=${status ?? 'none'}): ${
-          (error as Error).message
+          error instanceof Error ? error.message : String(error)
         }`,
       );
       throw new ServiceUnavailableException('인증 서버와 통신할 수 없습니다.');
     }
   }
 
-  async getUserInfo(accessToken: string) {
+  async getUserInfo(accessToken: string): Promise<UserInfoDto> {
     return this.fetchUserInfo(accessToken);
   }
 
@@ -174,12 +181,11 @@ export class AuthService {
   }
 
   // 우리 서버의 JWT 발급
-  private generateJwt(user: User): TokenResponseDto {
-    return {
-      accessToken: this.jwt.sign({
-        userId: user.id,
-        email: user.email,
-      }),
-    };
+  private async generateJwt(user: User): Promise<TokenResponseDto> {
+    const accessToken = await this.jwt.signAsync({
+      userId: user.id,
+      email: user.email,
+    });
+    return { accessToken };
   }
 }

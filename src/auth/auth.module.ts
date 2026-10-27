@@ -23,9 +23,8 @@ import { ConfigService } from '@nestjs/config';
         secret: config.getOrThrow<string>('JWT_SECRET'),
         signOptions: {
           // 예: 1h, 30m, 7d (단위 없는 숫자는 밀리초로 해석되므로 단위를 붙인다)
-          expiresIn: config.get<string>(
+          expiresIn: config.getOrThrow<string>(
             'JWT_EXPIRES_IN',
-            '1h',
           ) as JwtSignOptions['expiresIn'],
         },
       }),

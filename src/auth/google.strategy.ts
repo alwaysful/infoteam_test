@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, Profile } from 'passport-google-oauth20';
@@ -15,10 +15,16 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   }
   //아직 못받음
 
-  validate(accessToken: string, refreshToken: string, profile: Profile) {
-    return {
-      email: profile.emails?.[0]?.value,
-      name: profile.displayName,
-    };
+  validate(
+    accessToken: string,
+    refreshToken: string,
+    profile: Profile,
+  ): { email: string; name: string } {
+    const email = profile.emails?.[0]?.value;
+    if (!email) {
+      throw new UnauthorizedException('Email not provided');
+    }
+
+    return { email, name: profile.displayName };
   }
 }

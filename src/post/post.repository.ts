@@ -1,22 +1,27 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Post, Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { MyPostsResponseDto } from './dto/my-posts-response.dto';
 
 @Injectable()
 export class PostRepository {
   constructor(private prisma: PrismaService) {}
 
   // userId가 없으면 전체, 있으면 해당 유저의 글만 (undefined 조건은 Prisma가 무시)
-  findAll(userId?: string) {
+  findAll(userId?: string): Promise<Post[]> {
     return this.prisma.post.findMany({ where: { userId } });
   }
 
-  findById(id: number) {
+  findById(id: number): Promise<Post | null> {
     return this.prisma.post.findUnique({ where: { id } });
   }
 
   // 본인 글 목록 페이지네이션
-  async findMyPostsPaginated(userId: string, page: number, limit: number) {
+  async findMyPostsPaginated(
+    userId: string,
+    page: number,
+    limit: number,
+  ): Promise<MyPostsResponseDto> {
     const skip = (page - 1) * limit;
 
     const [posts, totalCount] = await Promise.all([
@@ -57,19 +62,19 @@ export class PostRepository {
     };
   }
 
-  create(data: Prisma.PostUncheckedCreateInput) {
+  create(data: Prisma.PostUncheckedCreateInput): Promise<Post> {
     return this.prisma.post.create({ data });
   }
 
   // updatedAt은 Prisma(@updatedAt)가 자동으로 갱신
-  update(id: number, data: Prisma.PostUncheckedUpdateInput) {
+  update(id: number, data: Prisma.PostUncheckedUpdateInput): Promise<Post> {
     return this.prisma.post.update({
       where: { id },
       data,
     });
   }
 
-  delete(id: number) {
+  delete(id: number): Promise<Post> {
     return this.prisma.post.delete({ where: { id } });
   }
 }

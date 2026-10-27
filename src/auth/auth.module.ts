@@ -13,9 +13,7 @@ import { ConfigService } from '@nestjs/config';
 @Module({
   imports: [
     PrismaModule,
-
     HttpModule,
-
     // JwtStrategy(검증)와 같은 JWT_SECRET으로 서명
     JwtModule.registerAsync({
       inject: [ConfigService],
